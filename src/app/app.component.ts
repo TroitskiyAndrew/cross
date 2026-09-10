@@ -64,7 +64,9 @@ export class AppComponent {
   }
 
   get isDraw(): boolean {
-    return !this.winner && this.board.every(cell => cell !== null);
+    if (this.winner) return false;
+    return this.countOutcomes(this.board, this.currentPlayer, 'X').wins === 0 &&
+      this.countOutcomes(this.board, this.currentPlayer, 'O').wins === 0;
   }
 
   get isFinished(): boolean {
@@ -86,7 +88,7 @@ export class AppComponent {
     if (line) {
       this.winningLine = line;
       this.winner = this.currentPlayer;
-    } else if (!this.isDraw) {
+    } else {
       this.currentPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
     }
   }

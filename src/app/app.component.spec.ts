@@ -90,15 +90,56 @@ describe('Tic-tac-toe', () => {
   });
 
   it('counts a draw as zero and hides predictions after the game ends', () => {
-    play([0, 1, 2, 4, 3, 5, 7, 6]);
-    expect(app.winProbability(8)).toBe('0.0');
+    play([0, 1, 2, 4, 3, 5, 7]);
+    expect(app.winProbability(6)).toBe('0.0');
     expect(app.winProbability(0)).toBeNull();
-    play([8]);
+    play([6]);
+    expect(app.isDraw).toBeTrue();
+    expect(app.board[8]).toBeNull();
     expect(app.winProbability(8)).toBeNull();
     app.restart();
     expect(app.winProbability(8)).not.toBeNull();
     play([0, 3, 1, 4, 2]);
     expect(app.winProbability(8)).toBeNull();
+  });
+
+  it('ends a dead position before the board fills and ignores later moves', () => {
+    play([0, 1, 2, 4, 3, 5, 7]);
+    expect(app.isDraw).toBeFalse();
+    play([6]);
+    expect(app.isDraw).toBeTrue();
+    expect(app.status).toContain('Ничья');
+    const before = [...app.board];
+    play([8]);
+    expect(app.board).toEqual(before);
+    app.restart();
+    expect(app.isFinished).toBeFalse();
+    play([4]);
+    expect(app.board[4]).toBe('X');
+  });
+
+  it('continues when only the opponent can still win', () => {
+    play([0, 1, 2, 4, 3, 5, 7]);
+    expect(app.currentPlayer).toBe('O');
+    expect(app.winProbability(6)).toBe('0.0');
+    expect(app.winProbability(8)).toBe('0.0');
+    expect(app.isDraw).toBeFalse();
+    play([8, 6]);
+    expect(app.winner).toBe('X');
+  });
+
+  it('disables empty cells and hides predictions after an early draw in the UI', async () => {
+    await TestBed.configureTestingModule({ imports: [AppComponent] }).compileComponents();
+    const fixture = TestBed.createComponent(AppComponent);
+    [0, 1, 2, 4, 3, 5, 7].forEach(i => fixture.componentInstance.handleCellClick(i));
+    fixture.detectChanges();
+    const root: HTMLElement = fixture.nativeElement;
+    const cells = root.querySelectorAll<HTMLButtonElement>('.cell');
+    cells[6].click();
+    fixture.detectChanges();
+    expect(root.querySelector('[role="status"]')?.textContent).toContain('Ничья');
+    expect(cells[8].disabled).toBeTrue();
+    expect(root.querySelectorAll('.probability').length).toBe(0);
   });
 
   it('shows zero when the opponent can win immediately despite winning continuations', () => {

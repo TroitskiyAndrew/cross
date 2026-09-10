@@ -53,10 +53,13 @@ Responsibilities:
 1. Define the task clearly.
 2. Agree on the minimal requirement.
 3. Design the smallest possible implementation.
-4. Build one step at a time.
-5. Validate behavior with real scenarios.
-6. Commit only when the step is stable.
-7. Move to the next task.
+4. Create a dedicated branch for the task.
+5. Build one step at a time.
+6. Validate behavior with real scenarios.
+7. Commit only when the step is stable.
+8. Open a pull request for review.
+9. Merge only after the pull request is approved.
+10. Move to the next task.
 
 ## Project Rules
 
@@ -98,6 +101,7 @@ We will use a small, disciplined AI workflow:
 - architecture second
 - implementation third
 - review fourth
-- commit last
+- branch + PR fifth
+- merge last
 
-This keeps the project under version control and avoids uncontrolled code drift.
+Each task must live in its own branch, with a pull request created before merging into main. This keeps the project under version control and avoids uncontrolled code drift.

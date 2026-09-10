@@ -1,0 +1,28 @@
+﻿:host { display: block; min-height: 100dvh; color: #263b37; }
+.game-shell { width: min(100% - 40px, 440px); margin: auto; padding: 54px 0 30px; }
+header { text-align: center; margin-bottom: 30px; }
+.eyebrow { font-size: 10px; font-weight: 700; letter-spacing: 3px; color: #697d73; }
+h1 { margin: 17px 0 12px; font-size: clamp(28px, 7vw, 38px); font-weight: 650; letter-spacing: -1.5px; }
+.title-divider { color: #a5ad9d; font-family: Georgia, serif; font-style: italic; padding: 0 9px; }
+.intro { margin: 0; font-size: 14px; color: #68756c; }
+.game-panel { padding: 24px; border: 1px solid #e2e5da; border-radius: 24px; background: #fffef9; box-shadow: 0 12px 40px #35463508; }
+.players { display: flex; gap: 10px; }
+.player { display: flex; align-items: center; gap: 8px; flex: 1; padding: 8px 10px; border: 1px solid transparent; border-radius: 10px; background: #f2f2eb; font-size: 12px; }
+.player.active { border-color: #688577; background: #eaf0e6; }
+.player-symbol { font-size: 27px; line-height: 1; }
+.player-number { margin-left: auto; font-size: 10px; color: #768176; }
+.status { text-align: center; margin: 24px 0 20px; font-size: 15px; font-weight: 600; }
+.board { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+.cell { display: grid; place-items: center; width: 100%; aspect-ratio: 1; padding: 0; border: 1px solid #e4e7dc; border-radius: 13px; background: #f4f5ee; font-size: clamp(40px, 14vw, 76px); line-height: 1; cursor: pointer; transition: background 150ms, border-color 150ms; }
+.cell:not(:disabled):hover { background: #e8eddf; border-color: #8da28e; }
+.cell:disabled { cursor: default; opacity: 1; }
+.cross { color: #376857; }
+.nought { color: #b66a44; }
+.cell.winning { background: #dfead4; border-color: #88a777; }
+button:focus-visible { outline: 3px solid #376857; outline-offset: 3px; }
+.restart { display: flex; justify-content: center; align-items: center; gap: 10px; width: 100%; margin-top: 23px; padding: 13px; border: 1px solid #dce0d4; border-radius: 10px; color: #344b3f; background: transparent; font-size: 14px; font-weight: 600; cursor: pointer; }
+.restart:hover { background: #edf1e7; }
+.restart span { font-size: 22px; line-height: 1; }
+footer { text-align: center; margin-top: 24px; color: #718071; font-size: 12px; line-height: 1.8; }
+@media (max-width: 380px) { .game-shell { width: calc(100% - 24px); padding-top: 30px; } .game-panel { padding: 16px; } .player { gap: 5px; } }
+@media (prefers-reduced-motion: reduce) { .cell { transition: none; } }

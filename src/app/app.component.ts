@@ -19,6 +19,37 @@ export class AppComponent {
   currentPlayer: Player = 'X';
   winningLine: number[] = [];
   winner: Player | null = null;
+  private readonly probabilityCache = new Map<string, number>();
+
+  winProbability(index: number): string | null {
+    if (this.isFinished || this.board[index] !== null) return null;
+    const nextBoard = [...this.board];
+    nextBoard[index] = this.currentPlayer;
+    const nextPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
+    return (100 * this.calculateProbability(nextBoard, nextPlayer, this.currentPlayer)).toFixed(1);
+  }
+
+  // Each available move is equally likely; terminal games stop immediately.
+  private calculateProbability(board: (Player | null)[], turn: Player, target: Player): number {
+    const key = board.map(cell => cell ?? '-').join('') + turn + target;
+    const cached = this.probabilityCache.get(key);
+    if (cached !== undefined) return cached;
+
+    const line = WINNING_LINES.find(indices =>
+      board[indices[0]] !== null && indices.every(i => board[i] === board[indices[0]])
+    );
+    if (line) return board[line[0]] === target ? 1 : 0;
+    const empty = board.flatMap((cell, i) => cell === null ? [i] : []);
+    if (empty.length === 0) return 0;
+
+    const probability = empty.reduce((sum, index) => {
+      const next = [...board];
+      next[index] = turn;
+      return sum + this.calculateProbability(next, turn === 'X' ? 'O' : 'X', target);
+    }, 0) / empty.length;
+    this.probabilityCache.set(key, probability);
+    return probability;
+  }
 
   get isDraw(): boolean {
     return !this.winner && this.board.every(cell => cell !== null);

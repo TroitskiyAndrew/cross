@@ -22,12 +22,20 @@
           [class.cross]="cell === 'X'" [class.nought]="cell === 'O'"
           [class.winning]="winningLine.includes($index)"
           [disabled]="cell !== null || isFinished"
+          [attr.aria-describedby]="cell === null && !isFinished ? 'probability-' + $index : null"
           [attr.aria-label]="'Строка ' + (rowNumber($index)) + ', столбец ' + ($index % 3 + 1) + ': ' + (cell === 'X' ? 'крестик' : cell === 'O' ? 'нолик' : 'пусто')"
           (click)="handleCellClick($index)">
           <span aria-hidden="true">{{ cell === 'X' ? '×' : cell === 'O' ? '○' : '' }}</span>
+          @if (winProbability($index); as probability) {
+            <span class="probability" [id]="'probability-' + $index">
+              <strong>{{ probability }}%</strong>
+              <span>шанс победы</span>
+            </span>
+          }
         </button>
       }
     </div>
+    <p class="probability-note">Наведите на пустую клетку или выберите её клавишей Tab: появится шанс победы текущего игрока после этого хода, если дальше оба играют случайно.</p>
     <button class="restart" type="button" (click)="restart()"><span aria-hidden="true">↻</span> Новая игра</button>
   </section>
   <footer>Соберите три знака в ряд — по горизонтали,<br>вертикали или диагонали.</footer>

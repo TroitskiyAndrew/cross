@@ -27,6 +27,14 @@ export class AppComponent {
     const nextBoard = [...this.board];
     nextBoard[index] = this.currentPlayer;
     const nextPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
+    if (WINNING_LINES.some(line => line.every(i => nextBoard[i] === this.currentPlayer))) {
+      return '100.0';
+    }
+    const opponentCanWin = WINNING_LINES.some(line =>
+      line.filter(i => nextBoard[i] === nextPlayer).length === 2 &&
+      line.some(i => nextBoard[i] === null)
+    );
+    if (opponentCanWin) return '0.0';
     const outcomes = this.countOutcomes(nextBoard, nextPlayer, this.currentPlayer);
     return (100 * outcomes.wins / outcomes.total).toFixed(1);
   }

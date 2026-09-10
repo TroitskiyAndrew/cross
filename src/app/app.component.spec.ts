@@ -101,12 +101,36 @@ describe('Tic-tac-toe', () => {
     expect(app.winProbability(8)).toBeNull();
   });
 
-  it('weights completed sequences equally even when they have different lengths', () => {
+  it('shows zero when the opponent can win immediately despite winning continuations', () => {
     play([0, 3, 1, 4]);
     // After X at 6 there are 17 terminal sequences: 4 X wins, 5 O wins, 8 draws.
-    // O at 5 ends immediately; other replies have multiple continuations.
-    expect(app.winProbability(6)).toBe('23.5');
-    expect(app.winProbability(6)).toBe('23.5');
+    // The immediate O win at 5 overrides the otherwise positive percentage.
+    expect(app.winProbability(6)).toBe('0.0');
+    expect(app.winProbability(6)).toBe('0.0');
+    expect(Number(app.winProbability(5))).toBeGreaterThan(0);
+    expect(app.winProbability(2)).toBe('100.0');
+  });
+
+  lines.forEach(line => {
+    it(`detects an immediate opponent threat on ${line} for either player`, () => {
+      for (const player of ['X', 'O'] as const) {
+        app.restart();
+        app.currentPlayer = player;
+        const opponent = player === 'X' ? 'O' : 'X';
+        app.board[line[0]] = opponent;
+        app.board[line[1]] = opponent;
+        const outside = Array.from({ length: 9 }, (_, i) => i).filter(i => !line.includes(i));
+        app.board[outside[0]] = player;
+        if (player === 'X') app.board[outside[1]] = player;
+        const before = [...app.board];
+        const move = outside.slice(2).find(index => !lines.some(candidate =>
+          candidate.every(i => i === index || app.board[i] === player)
+        ))!;
+        expect(app.winProbability(move)).toBe('0.0');
+        expect(app.board).toEqual(before);
+        expect(app.currentPlayer).toBe(player);
+      }
+    });
   });
 
   it('attaches predictions to free buttons and updates them after a move', async () => {

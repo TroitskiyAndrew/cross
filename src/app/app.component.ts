@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 
 type Player = 'X' | 'O';
+type Outcomes = { wins: number; total: number };
 
 const WINNING_LINES = [
   [0, 1, 2], [3, 4, 5], [6, 7, 8],
@@ -19,18 +20,20 @@ export class AppComponent {
   currentPlayer: Player = 'X';
   winningLine: number[] = [];
   winner: Player | null = null;
-  private readonly probabilityCache = new Map<string, number>();
+  private readonly probabilityCache = new Map<string, Outcomes>();
 
   winProbability(index: number): string | null {
     if (this.isFinished || this.board[index] !== null) return null;
     const nextBoard = [...this.board];
     nextBoard[index] = this.currentPlayer;
     const nextPlayer = this.currentPlayer === 'X' ? 'O' : 'X';
-    return (100 * this.calculateProbability(nextBoard, nextPlayer, this.currentPlayer)).toFixed(1);
+    const outcomes = this.countOutcomes(nextBoard, nextPlayer, this.currentPlayer);
+    return (100 * outcomes.wins / outcomes.total).toFixed(1);
   }
 
-  // Each available move is equally likely; terminal games stop immediately.
-  private calculateProbability(board: (Player | null)[], turn: Player, target: Player): number {
+  // Count every legal move sequence once, stopping at the first win or draw.
+  // Cached subtrees are added for each path reaching them, not deduplicated.
+  private countOutcomes(board: (Player | null)[], turn: Player, target: Player): Outcomes {
     const key = board.map(cell => cell ?? '-').join('') + turn + target;
     const cached = this.probabilityCache.get(key);
     if (cached !== undefined) return cached;
@@ -38,17 +41,18 @@ export class AppComponent {
     const line = WINNING_LINES.find(indices =>
       board[indices[0]] !== null && indices.every(i => board[i] === board[indices[0]])
     );
-    if (line) return board[line[0]] === target ? 1 : 0;
+    if (line) return { wins: board[line[0]] === target ? 1 : 0, total: 1 };
     const empty = board.flatMap((cell, i) => cell === null ? [i] : []);
-    if (empty.length === 0) return 0;
+    if (empty.length === 0) return { wins: 0, total: 1 };
 
-    const probability = empty.reduce((sum, index) => {
+    const outcomes = empty.reduce<Outcomes>((sum, index) => {
       const next = [...board];
       next[index] = turn;
-      return sum + this.calculateProbability(next, turn === 'X' ? 'O' : 'X', target);
-    }, 0) / empty.length;
-    this.probabilityCache.set(key, probability);
-    return probability;
+      const child = this.countOutcomes(next, turn === 'X' ? 'O' : 'X', target);
+      return { wins: sum.wins + child.wins, total: sum.total + child.total };
+    }, { wins: 0, total: 0 });
+    this.probabilityCache.set(key, outcomes);
+    return outcomes;
   }
 
   get isDraw(): boolean {

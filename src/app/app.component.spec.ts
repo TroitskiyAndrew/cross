@@ -79,7 +79,7 @@ describe('Tic-tac-toe', () => {
     expect(app.winProbability(5)).toBe('100.0');
   });
 
-  it('averages equally likely replies and leaves the current game untouched', () => {
+  it('counts winning continuations and leaves the current game untouched', () => {
     play([0, 1, 2, 3, 7, 4]);
     const before = [...app.board];
     // After X plays 5: O at 6 allows X to win at 8; O at 8 leads to a draw.
@@ -99,6 +99,14 @@ describe('Tic-tac-toe', () => {
     expect(app.winProbability(8)).not.toBeNull();
     play([0, 3, 1, 4, 2]);
     expect(app.winProbability(8)).toBeNull();
+  });
+
+  it('weights completed sequences equally even when they have different lengths', () => {
+    play([0, 3, 1, 4]);
+    // After X at 6 there are 17 terminal sequences: 4 X wins, 5 O wins, 8 draws.
+    // O at 5 ends immediately; other replies have multiple continuations.
+    expect(app.winProbability(6)).toBe('23.5');
+    expect(app.winProbability(6)).toBe('23.5');
   });
 
   it('attaches predictions to free buttons and updates them after a move', async () => {

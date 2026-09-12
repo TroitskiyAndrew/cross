@@ -69,6 +69,123 @@ describe('Tic-tac-toe', () => {
     root.querySelector<HTMLButtonElement>('.restart')!.click();
     fixture.detectChanges();
     expect(cells[0].disabled).toBeFalse();
-    expect(cells[0].textContent?.trim()).toBe('');
+    expect(cells[0].querySelector('[aria-hidden]')?.textContent?.trim()).toBe('');
+  });
+
+  it('shows 100 percent for an immediate win for either player', () => {
+    play([0, 3, 1, 4]);
+    expect(app.winProbability(2)).toBe('100.0');
+    play([8]);
+    expect(app.winProbability(5)).toBe('100.0');
+  });
+
+  it('counts winning continuations and leaves the current game untouched', () => {
+    play([0, 1, 2, 3, 7, 4]);
+    const before = [...app.board];
+    // After X plays 5: O at 6 allows X to win at 8; O at 8 leads to a draw.
+    expect(app.winProbability(5)).toBe('50.0');
+    expect(app.board).toEqual(before);
+    expect(app.currentPlayer).toBe('X');
+    expect(app.winner).toBeNull();
+  });
+
+  it('counts a draw as zero and hides predictions after the game ends', () => {
+    play([0, 1, 2, 4, 3, 5, 7]);
+    expect(app.winProbability(6)).toBe('0.0');
+    expect(app.winProbability(0)).toBeNull();
+    play([6]);
+    expect(app.isDraw).toBeTrue();
+    expect(app.board[8]).toBeNull();
+    expect(app.winProbability(8)).toBeNull();
+    app.restart();
+    expect(app.winProbability(8)).not.toBeNull();
+    play([0, 3, 1, 4, 2]);
+    expect(app.winProbability(8)).toBeNull();
+  });
+
+  it('ends a dead position before the board fills and ignores later moves', () => {
+    play([0, 1, 2, 4, 3, 5, 7]);
+    expect(app.isDraw).toBeFalse();
+    play([6]);
+    expect(app.isDraw).toBeTrue();
+    expect(app.status).toContain('Ничья');
+    const before = [...app.board];
+    play([8]);
+    expect(app.board).toEqual(before);
+    app.restart();
+    expect(app.isFinished).toBeFalse();
+    play([4]);
+    expect(app.board[4]).toBe('X');
+  });
+
+  it('continues when only the opponent can still win', () => {
+    play([0, 1, 2, 4, 3, 5, 7]);
+    expect(app.currentPlayer).toBe('O');
+    expect(app.winProbability(6)).toBe('0.0');
+    expect(app.winProbability(8)).toBe('0.0');
+    expect(app.isDraw).toBeFalse();
+    play([8, 6]);
+    expect(app.winner).toBe('X');
+  });
+
+  it('disables empty cells and hides predictions after an early draw in the UI', async () => {
+    await TestBed.configureTestingModule({ imports: [AppComponent] }).compileComponents();
+    const fixture = TestBed.createComponent(AppComponent);
+    [0, 1, 2, 4, 3, 5, 7].forEach(i => fixture.componentInstance.handleCellClick(i));
+    fixture.detectChanges();
+    const root: HTMLElement = fixture.nativeElement;
+    const cells = root.querySelectorAll<HTMLButtonElement>('.cell');
+    cells[6].click();
+    fixture.detectChanges();
+    expect(root.querySelector('[role="status"]')?.textContent).toContain('Ничья');
+    expect(cells[8].disabled).toBeTrue();
+    expect(root.querySelectorAll('.probability').length).toBe(0);
+  });
+
+  it('shows zero when the opponent can win immediately despite winning continuations', () => {
+    play([0, 3, 1, 4]);
+    // After X at 6 there are 17 terminal sequences: 4 X wins, 5 O wins, 8 draws.
+    // The immediate O win at 5 overrides the otherwise positive percentage.
+    expect(app.winProbability(6)).toBe('0.0');
+    expect(app.winProbability(6)).toBe('0.0');
+    expect(Number(app.winProbability(5))).toBeGreaterThan(0);
+    expect(app.winProbability(2)).toBe('100.0');
+  });
+
+  lines.forEach(line => {
+    it(`detects an immediate opponent threat on ${line} for either player`, () => {
+      for (const player of ['X', 'O'] as const) {
+        app.restart();
+        app.currentPlayer = player;
+        const opponent = player === 'X' ? 'O' : 'X';
+        app.board[line[0]] = opponent;
+        app.board[line[1]] = opponent;
+        const outside = Array.from({ length: 9 }, (_, i) => i).filter(i => !line.includes(i));
+        app.board[outside[0]] = player;
+        if (player === 'X') app.board[outside[1]] = player;
+        const before = [...app.board];
+        const move = outside.slice(2).find(index => !lines.some(candidate =>
+          candidate.every(i => i === index || app.board[i] === player)
+        ))!;
+        expect(app.winProbability(move)).toBe('0.0');
+        expect(app.board).toEqual(before);
+        expect(app.currentPlayer).toBe(player);
+      }
+    });
+  });
+
+  it('attaches predictions to free buttons and updates them after a move', async () => {
+    await TestBed.configureTestingModule({ imports: [AppComponent] }).compileComponents();
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const root: HTMLElement = fixture.nativeElement;
+    const cells = root.querySelectorAll<HTMLButtonElement>('.cell');
+    expect(root.querySelectorAll('.probability').length).toBe(9);
+    expect(cells[0].getAttribute('aria-describedby')).toBe('probability-0');
+    cells[0].click();
+    fixture.detectChanges();
+    expect(cells[0].querySelector('.probability')).toBeNull();
+    expect(cells[0].hasAttribute('aria-describedby')).toBeFalse();
+    expect(cells[1].querySelector('strong')?.textContent).toBe(fixture.componentInstance.winProbability(1) + '%');
   });
 });

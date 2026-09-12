@@ -16,6 +16,12 @@ h1 { margin: 17px 0 12px; font-size: clamp(28px, 7vw, 38px); font-weight: 650; l
 .cell { display: grid; place-items: center; width: 100%; aspect-ratio: 1; padding: 0; border: 1px solid #e4e7dc; border-radius: 13px; background: #f4f5ee; font-size: clamp(40px, 14vw, 76px); line-height: 1; cursor: pointer; transition: background 150ms, border-color 150ms; }
 .cell:not(:disabled):hover { background: #e8eddf; border-color: #8da28e; }
 .cell:disabled { cursor: default; opacity: 1; }
+.cell { position: relative; }
+.probability { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; visibility: hidden; color: #344b3f; }
+.probability strong { font-size: clamp(18px, 5vw, 26px); }
+.probability span { font-size: 10px; }
+.cell:hover .probability, .cell:focus-visible .probability { visibility: visible; }
+.probability-note { margin: 16px 0 0; font-size: 12px; line-height: 1.6; color: #68756c; }
 .cross { color: #376857; }
 .nought { color: #b66a44; }
 .cell.winning { background: #dfead4; border-color: #88a777; }
